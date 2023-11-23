@@ -248,7 +248,9 @@ class CassetteCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
         # Translators: Catalog view title for page ('Добавить предмет')
         context['page_title'] = gettext('Add item')
         if self.request.POST:
-            context['imageformset'] = ImageFormSet(self.request.POST)
+            context['imageformset'] = ImageFormSet(self.request.POST,
+                                                   self.request.FILES,
+                                                   instance=self.object)
             # context['cassette_image_form'] = CassetteImageForm(self.request.POST, self.request.FILES)
             # context['cassette_image_addons_form'] = CassetteImageAddonsForm(self.request.POST, self.request.FILES)
             context['cassette_price_form'] = CassettePriceForm(self.request.POST)
@@ -262,21 +264,27 @@ class CassetteCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     def form_valid(self, form):
         context = self.get_context_data()
         cassette_price_form = context['cassette_price_form']
-        cassette_image_form = context['cassette_image_form']
-        cassette_image_addons_form = context['cassette_image_addons_form']
-        if cassette_price_form.is_valid() and cassette_image_form.is_valid() and cassette_image_addons_form.is_valid():
+        image_form_set = context['imageformset']
+        # cassette_image_form = context['cassette_image_form']
+        # cassette_image_addons_form = context['cassette_image_addons_form']
+        if cassette_price_form.is_valid() and image_form_set.is_valid():
             self.object = form.save(commit=False)
             self.object.user = self.request.user
             self.object.save()
             price_object = cassette_price_form.save(commit=False)
             price_object.cassette = self.object
             price_object.save()
-            image_object = cassette_image_form.save(commit=False)
-            image_object.cassette = self.object
-            image_object.frequency_response = cassette_image_addons_form.cleaned_data['frequency_response']
-            image_object.barcode = cassette_image_addons_form.cleaned_data['barcode']
-            image_object.save()
+            image_object_list = image_form_set.save(commit=False)
+            for item in image_object_list:
+                item.cassette = self.object
+                item.save()
+
+            # image_object.cassette = self.object
+            # image_object.frequency_response = cassette_image_addons_form.cleaned_data['frequency_response']
+            # image_object.barcode = cassette_image_addons_form.cleaned_data['barcode']
+            # image_object.save()
         else:
+            print("Error during image_form_set validation:", image_form_set.errors)
             return self.render_to_response(self.get_context_data(form=form))
         return super().form_valid(form)
 

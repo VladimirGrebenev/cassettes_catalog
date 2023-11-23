@@ -26,9 +26,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = str(os.getenv('DJ_SECRET_KEY'))
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = str(os.getenv('DJ_DEBUG')) == 'True'
+DEBUG = 'True'
 
-ALLOWED_HOSTS = str(os.getenv('DJ_ALLOWED_HOSTS')).split(',')
+ALLOWED_HOSTS = []
 
 # Application definition
 
@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'core.apps.CoreConfig',
     'catalog.apps.CatalogConfig',
     'collection_management.apps.CollectionManagementConfig',
+
 
     # 'debug_toolbar',
     'allauth',
@@ -94,10 +95,17 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'kassets.wsgi.application'
 
-try:
-    from kassets.local_settings import DATABASES
-except ImportError as e:
-    pass
+# try:
+#     from kassets.local_settings import DATABASES
+# except ImportError as e:
+#     pass
+
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
+    }
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
